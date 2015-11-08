@@ -21,8 +21,8 @@
 #include <unistd.h>
 
 #define log_file_name "log"
-//#define other_ip "192.168.1.26"
-#define other_ip "127.0.0.1"
+//#define target_ip "192.168.1.26"
+#define target_ip "127.0.0.1"
 
 using namespace std;
 
@@ -69,7 +69,7 @@ public:
 	transmitter(int &sock, sockaddr_in &addr) {
 		tr_sock = sock;
 		tr_addr = addr;
-		tr_addr.sin_addr.s_addr = inet_addr(other_ip);
+		tr_addr.sin_addr.s_addr = inet_addr(target_ip);
 		//connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr));
 	}
 
