@@ -55,9 +55,9 @@ public:
 		re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len);
 		while(1) {
 			char re_message[32];
-			mtx2.lock();
-			recv(re_new_sock, re_message, sizeof(re_message), 0);
-			mtx2.unlock();
+			if((recv(re_new_sock, re_message, sizeof(re_message), 0)) < 0) {
+				cout << "recv error" << endl;
+			}
 
 			mtx2.lock();
 			cout << "receive message >> " << re_message << endl;
@@ -84,7 +84,10 @@ public:
 	}
 
 	void operator () () {
-		connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr));
+		int flag = -1;
+		while(flag == -1) {
+			flag = connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr));
+		}
 
 		while(1) {
 			char tr_message[32];
@@ -94,9 +97,9 @@ public:
 			cin >> tr_message;
 			mtx1.unlock();
 
-			mtx1.lock();
+			//mtx1.lock();
 			send(tr_sock, tr_message, sizeof(tr_message), 0);
-			mtx1.unlock();
+			//mtx1.unlock();
 		}
 	}
 
