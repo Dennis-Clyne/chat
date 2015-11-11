@@ -46,22 +46,32 @@ public:
 		inet_aton("INADDR_ANY", &read_addr.sin_addr);
 
 		bind(re_sock, (sockaddr *)&read_addr, sizeof(read_addr));
-		//listen(re_sock, 1);
-		//re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len);
 	}
 
 	void operator() () {
-		listen(re_sock, 1);
-		re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len);
-		while(1) {
-			char re_message[32];
-			if((recv(re_new_sock, re_message, sizeof(re_message), 0)) < 0) {
+		//listen(re_sock, 1);
+		char buff[32] = "";
+		char stock[32];
+		strcpy(stock, buff);
+
+		while(1) { 
+			if(listen(re_sock, 1) < 0) {
+				cerr << "socket listen error" << endl;
+			}
+
+			if((re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
+				cerr << "socket accept error" << endl;
+			}
+
+			if((recv(re_new_sock, buff, sizeof(buff), 0)) < 0) {
 				cout << "recv error" << endl;
 			}
 
-			mtx2.lock();
-			cout << "receive message >> " << re_message << endl;
-			mtx2.unlock();
+			if(strcmp(stock, buff) != 0) {
+				cout << endl;
+				cout << "receive message >> " << buff << endl;
+				strcpy(stock, buff);
+			}
 		}
 	}
 
@@ -80,27 +90,24 @@ public:
 		tr_addr.sin_family = AF_INET;
 		tr_addr.sin_port = htons(4000);
 		tr_addr.sin_addr.s_addr = inet_addr(target_ip);
-		//connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr));
 	}
 
 	void operator () () {
-		int flag = -1;
-		while(flag == -1) {
-			flag = connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr));
+
+		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
+			cerr << "socket connect error" << endl;
 		}
 
-		while(1) {
-			char tr_message[32];
-			//lock_guard<mutex> lock(mtx1);
-			mtx1.lock();
-			cout << "input message >> ";
-			cin >> tr_message;
-			mtx1.unlock();
+		char tr_message[32];
 
-			//mtx1.lock();
-			send(tr_sock, tr_message, sizeof(tr_message), 0);
-			//mtx1.unlock();
-		}
+		//lock_guard<mutex> lock(mtx1);
+		//mtx1.lock();
+		cout << endl;
+		cout << "input message >> ";
+		cin >> tr_message;
+		//mtx1.unlock();
+
+		send(tr_sock, tr_message, sizeof(tr_message), 0);
 	}
 
 	~transmitter() { close(tr_sock); }
@@ -112,25 +119,15 @@ int main()
 	receiver re_obj;
 	thread th1(ref(re_obj));
 
-	cout << "target ip >> " << endl;
+	//cout << "target ip >> " << endl;
 	//cin >> 
 
-	transmitter tr_obj;
-	thread th2(ref(tr_obj));
+	while(1) {
+		transmitter tr_obj;
+		thread th2(ref(tr_obj));
+		th2.join();
+	}
 
 	th1.join();
-	th2.join();
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
