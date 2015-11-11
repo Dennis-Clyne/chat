@@ -93,21 +93,32 @@ public:
 	}
 
 	void operator () () {
+		char tr_message[32];
+		cout << endl;
+		cout << "input message >> ";
+		cin >> tr_message;
 
 		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
 			cerr << "socket connect error" << endl;
 		}
 
-		char tr_message[32];
+		//char tr_message[32];
 
 		//lock_guard<mutex> lock(mtx1);
 		//mtx1.lock();
+		/*
 		cout << endl;
 		cout << "input message >> ";
 		cin >> tr_message;
+		*/
 		//mtx1.unlock();
 
-		send(tr_sock, tr_message, sizeof(tr_message), 0);
+		if((send(tr_sock, tr_message, sizeof(tr_message), 0)) < 0) {
+			cerr << "send error" << endl;
+		}
+		else {
+			cout << "connect success" << endl;
+		}
 	}
 
 	~transmitter() { close(tr_sock); }
