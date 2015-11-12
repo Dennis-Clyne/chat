@@ -22,8 +22,8 @@
 
 #define log_file_name "log"
 #define port_number 40000
-#define target_ip "192.168.1.26"
-//#define target_ip "127.0.0.1"
+//#define target_ip "192.168.1.26"
+#define target_ip "127.0.0.1"
 
 using namespace std;
 
@@ -101,9 +101,6 @@ public:
 
 		if((send(tr_sock, tr_message, sizeof(tr_message), 0)) < 0) {
 			cerr << "send error" << endl;
-		}
-		else {
-			cout << "connect success" << endl;
 		}
 	}
 
