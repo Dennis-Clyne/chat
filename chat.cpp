@@ -121,8 +121,7 @@ int main()
 
 	while(1) {
 		transmitter tr_obj;
-		thread th2(ref(tr_obj));
-		th2.join();
+		tr_obj();
 	}
 
 	th1.join();
