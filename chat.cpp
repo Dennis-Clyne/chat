@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #define log_file_name "log"
+#define port_number 40000
 #define target_ip "192.168.1.26"
 //#define target_ip "127.0.0.1"
 
@@ -42,23 +43,19 @@ public:
 		bzero((char *)&write_addr, sizeof(write_addr));
 		re_sock = socket(AF_INET, SOCK_STREAM, 0);
 		read_addr.sin_family = AF_INET;
-		read_addr.sin_port = htons(4000);
+		read_addr.sin_port = htons(port_number);
 		inet_aton("INADDR_ANY", &read_addr.sin_addr);
 
 		bind(re_sock, (sockaddr *)&read_addr, sizeof(read_addr));
+		listen(re_sock, 1);
 	}
 
 	void operator() () {
-		//listen(re_sock, 1);
 		char buff[32] = "";
 		char stock[32];
 		strcpy(stock, buff);
 
 		while(1) { 
-			if(listen(re_sock, 1) < 0) {
-				cerr << "socket listen error" << endl;
-			}
-
 			if((re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
 				cerr << "socket accept error" << endl;
 			}
@@ -88,7 +85,7 @@ public:
 		bzero((char *)&tr_addr, sizeof(tr_addr));
 		tr_sock = socket(AF_INET, SOCK_STREAM, 0);
 		tr_addr.sin_family = AF_INET;
-		tr_addr.sin_port = htons(4000);
+		tr_addr.sin_port = htons(port_number);
 		tr_addr.sin_addr.s_addr = inet_addr(target_ip);
 	}
 
@@ -101,17 +98,6 @@ public:
 		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
 			cerr << "socket connect error" << endl;
 		}
-
-		//char tr_message[32];
-
-		//lock_guard<mutex> lock(mtx1);
-		//mtx1.lock();
-		/*
-		cout << endl;
-		cout << "input message >> ";
-		cin >> tr_message;
-		*/
-		//mtx1.unlock();
 
 		if((send(tr_sock, tr_message, sizeof(tr_message), 0)) < 0) {
 			cerr << "send error" << endl;
