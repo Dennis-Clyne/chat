@@ -23,7 +23,7 @@
 #define log_file_name "log"
 #define port_number 40000
 //#define target_ip "192.168.1.26"
-#define target_ip "127.0.0.1"
+//#define target_ip "127.0.0.1"
 
 using namespace std;
 
@@ -57,7 +57,7 @@ public:
 
 		while(1) { 
 			if((re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
-				cerr << "socket accept error" << endl;
+				cerr << "accept error" << endl;
 			}
 
 			if((recv(re_new_sock, buff, sizeof(buff), 0)) < 0) {
@@ -81,22 +81,23 @@ class transmitter {
 	sockaddr_in tr_addr;
 
 public:
-	transmitter() {
+	transmitter(string target_ip) {
 		bzero((char *)&tr_addr, sizeof(tr_addr));
 		tr_sock = socket(AF_INET, SOCK_STREAM, 0);
 		tr_addr.sin_family = AF_INET;
 		tr_addr.sin_port = htons(port_number);
-		tr_addr.sin_addr.s_addr = inet_addr(target_ip);
+		//tr_addr.sin_addr.s_addr = inet_addr(target_ip);
+		tr_addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
 	}
 
 	void operator () () {
 		char tr_message[32];
-		cout << endl;
-		cout << "input message >> ";
+		//cout << endl;
+		//cout << "input message >> ";
 		cin >> tr_message;
 
 		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
-			cerr << "socket connect error" << endl;
+			cerr << "connect error" << endl;
 		}
 
 		if((send(tr_sock, tr_message, sizeof(tr_message), 0)) < 0) {
@@ -110,14 +111,17 @@ public:
 
 int main()
 {
+	string target;
+	cout << "input target ip >> ";
+	cin >> target;
+
 	receiver re_obj;
 	thread th1(ref(re_obj));
 
-	//cout << "target ip >> " << endl;
-	//cin >> 
+	cout << "chat start" << endl;
 
 	while(1) {
-		transmitter tr_obj;
+		transmitter tr_obj(target);
 		tr_obj();
 	}
 
