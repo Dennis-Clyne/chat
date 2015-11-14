@@ -52,22 +52,30 @@ public:
 
 	void operator() () {
 		char buff[32] = "";
-		char stock[32];
-		strcpy(stock, buff);
+		//char stock[32];
+		//strcpy(stock, buff);
+		//string str, stock;
+		//str.resize(32);
 
 		while(1) { 
+			string str, stock;
+			str.resize(32);
+			//stock = str;
 			if((re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
 				cerr << "accept error" << endl;
 			}
 
-			if((recv(re_new_sock, buff, sizeof(buff), 0)) < 0) {
+			//if((recv(re_new_sock, buff, sizeof(buff), 0)) < 0) {
+			if((recv(re_new_sock, (void *)str.data(), str.capacity(), 0)) < 0) {
 				cout << "recv error" << endl;
 			}
 
-			if(strcmp(stock, buff) != 0) {
+			//if(strcmp(stock, buff) != 0) {
+			if(str != stock) {
 				cout << endl;
-				cout << "receive message >> " << buff << endl;
-				strcpy(stock, buff);
+				cout << "receive message >> " << str << endl;
+				//strcpy(stock, buff);
+				stock = str;
 			}
 		}
 	}
@@ -91,16 +99,16 @@ public:
 	}
 
 	void operator () () {
-		char tr_message[32];
+		string tr_message;
 		//cout << endl;
 		//cout << "input message >> ";
-		cin >> tr_message;
+		getline(cin, tr_message);
 
 		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
 			cerr << "connect error" << endl;
 		}
 
-		if((send(tr_sock, tr_message, sizeof(tr_message), 0)) < 0) {
+		if((send(tr_sock, tr_message.data(), tr_message.length() * sizeof(char), 0)) < 0) {
 			cerr << "send error" << endl;
 		}
 	}
