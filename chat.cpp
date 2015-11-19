@@ -20,10 +20,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define log_file_name "log"
-#define port_number 40000
+#define LOG_FILE_NAME "log"
+#define PORT_NUMBER 40000
 //#define target_ip "192.168.1.26"
 //#define target_ip "127.0.0.1"
+#define MESSAGE_SIZE 3000
 
 using namespace std;
 
@@ -43,7 +44,7 @@ public:
 		bzero((char *)&write_addr, sizeof(write_addr));
 		re_sock = socket(AF_INET, SOCK_STREAM, 0);
 		read_addr.sin_family = AF_INET;
-		read_addr.sin_port = htons(port_number);
+		read_addr.sin_port = htons(PORT_NUMBER);
 		inet_aton("INADDR_ANY", &read_addr.sin_addr);
 
 		bind(re_sock, (sockaddr *)&read_addr, sizeof(read_addr));
@@ -51,10 +52,10 @@ public:
 	}
 
 	void operator() () {
-		string str, stock;
+		string re_message, stock;
 
 		while(1) { 
-			str.resize(3000);
+			re_message.resize(MESSAGE_SIZE);
 			if((re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
 				cerr << "accept error" << endl;
 			}
@@ -63,11 +64,13 @@ public:
 				cout << "recv error" << endl;
 			}
 
-			if(str != stock) {
+			// The message which we received before is copied to the stock.
+			// A received message is outputted, only when it isn't equal to the stock.
+			if(re_message != stock) {
 				cout << endl;
-				cout << "receive message >> " << str << endl << endl;
-				stock = str;
-				str.clear();
+				cout << "receive message >> " << re_message << endl << endl;
+				stock = re_message;
+				re_message.clear();
 			}
 		}
 	}
@@ -81,23 +84,21 @@ class transmitter {
 	sockaddr_in tr_addr;
 
 public:
-	transmitter(string target_ip) {
+	transmitter(string target) {
 		bzero((char *)&tr_addr, sizeof(tr_addr));
 		tr_sock = socket(AF_INET, SOCK_STREAM, 0);
 		tr_addr.sin_family = AF_INET;
-		tr_addr.sin_port = htons(port_number);
+		tr_addr.sin_port = htons(PORT_NUMBER);
 		//tr_addr.sin_addr.s_addr = inet_addr(target_ip);
-		tr_addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
+		tr_addr.sin_addr.s_addr = inet_addr(target.c_str());
 	}
 
 	void operator () () {
 		string tr_message;
-		//cout << endl;
-		//cout << "input message >> ";
+
 		do {
 		getline(cin, tr_message);
 		} while(tr_message.length() == 0);
-		//cin >> tr_message;
 
 		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
 			cerr << "connect error" << endl;
@@ -115,13 +116,15 @@ public:
 int main()
 {
 	string target;
+
 	cout << "input target ip >> ";
 	cin >> target;
+	cout << "chat start" << endl << endl;
 
 	receiver re_obj;
-	thread th1(ref(re_obj));
 
-	cout << "chat start" << endl;
+	//Always keeps receiving by th1 the messages.
+	thread th1(ref(re_obj));
 
 	while(1) {
 		transmitter tr_obj(target);
