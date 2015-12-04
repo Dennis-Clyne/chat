@@ -92,22 +92,8 @@ public :
 	}
 
 
-	void recv_roop() {
-		while(1) {
-			receiver();
-			/*
-			if(recv_message != stock_message) {
-				cout << "\treceive message >> " << recv_message << endl << endl;
-				stock_message = recv_message;
-				recv_message.clear();
-			}
-			*/
-		}
-	}
-
-
 	void th_chat() {
-		thread th1(&chat::recv_roop, this);
+		thread th1([this]{while(1) { receiver(); }});
 
 		while(1) {
 			string send_message;
@@ -128,7 +114,7 @@ int main()
 	cout << "input target ip >> ";
 	//cin >> target_ip;
 	target_ip = TARGET_IP;
-	cout << "chat start" << endl << endl;
+	cout << "chat start\v" << endl;
 
 	chat obj(target_ip);
 	obj.th_chat();
