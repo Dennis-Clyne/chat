@@ -23,114 +23,117 @@
 #define LOG_FILE_NAME "log"
 #define PORT_NUMBER 40000
 //#define target_ip "192.168.1.26"
-//#define target_ip "127.0.0.1"
+#define TARGET_IP "127.0.0.1"
 #define MESSAGE_SIZE 3000
 
 using namespace std;
 
-mutex mtx1, mtx2;
-
-
-class receiver {
-	int re_sock = 0;
-	int re_new_sock = 0;
-	sockaddr_in read_addr;
-	sockaddr_in write_addr;
+class chat {
+	int recv_sock = 0, send_sock = 0, client_sock = 0;
+	sockaddr_in base_addr, read_addr, write_addr, send_addr;
 	socklen_t write_addr_len = sizeof(write_addr);
+	string recv_message, stock_message;
 
-public:
-	receiver() {
-		bzero((char *)&read_addr, sizeof(read_addr));
-		bzero((char *)&write_addr, sizeof(write_addr));
-		re_sock = socket(AF_INET, SOCK_STREAM, 0);
-		read_addr.sin_family = AF_INET;
-		read_addr.sin_port = htons(PORT_NUMBER);
+public :
+	chat(string target_ip) {
+		recv_sock = socket(AF_INET, SOCK_STREAM, 0);
+		send_sock = socket(AF_INET, SOCK_STREAM, 0);
+		client_sock = socket(AF_INET, SOCK_STREAM, 0);
+
+		bzero((char *)&base_addr, sizeof(base_addr));
+		base_addr.sin_family = AF_INET;
+		base_addr.sin_port = htons(PORT_NUMBER);
+
+		read_addr = send_addr = base_addr; 
 		inet_aton("INADDR_ANY", &read_addr.sin_addr);
+		bind(recv_sock, (sockaddr *)&read_addr, sizeof(read_addr));
 
-		bind(re_sock, (sockaddr *)&read_addr, sizeof(read_addr));
-		listen(re_sock, 1);
+		send_addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
+
+		listen(recv_sock, 1);
 	}
 
-	void operator() () {
-		string re_message, stock;
 
-		while(1) { 
-			re_message.resize(MESSAGE_SIZE);
-			if((re_new_sock = accept(re_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
-				cerr << "accept error" << endl;
-			}
+	~chat() {
+		close(recv_sock);
+		close(send_sock);
+		close(client_sock);
+	}
 
-			if((recv(re_new_sock, (void *)str.data(), str.capacity(), 0)) < 0) {
-				cout << "recv error" << endl;
-			}
+	//戻り値stringにして受信メッセージ返した方がいいかも。
+	void receiver() {
+		recv_message.resize(MESSAGE_SIZE);
 
-			// The message which we received before is copied to the stock.
-			// A received message is outputted, only when it isn't equal to the stock.
-			if(re_message != stock) {
-				cout << endl;
-				cout << "receive message >> " << re_message << endl << endl;
-				stock = re_message;
-				re_message.clear();
-			}
+		if((client_sock = accept(recv_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
+			cerr << "accept error" << endl;
+		}
+
+		if((recv(client_sock, (void *)recv_message.data(), recv_message.capacity(), 0)) < 0) {
+			cerr << "recv error" << endl;
+		}
+
+		//return recv_message;
+		if(recv_message != stock_message) {
+			cout << "\treceive message >> " << recv_message << endl << endl;
+			stock_message = recv_message;
+			recv_message.clear();
 		}
 	}
 
-	~receiver() { close(re_sock); close(re_new_sock); }
-};
 
-
-class transmitter {
-	int tr_sock = 0;
-	sockaddr_in tr_addr;
-
-public:
-	transmitter(string target) {
-		bzero((char *)&tr_addr, sizeof(tr_addr));
-		tr_sock = socket(AF_INET, SOCK_STREAM, 0);
-		tr_addr.sin_family = AF_INET;
-		tr_addr.sin_port = htons(PORT_NUMBER);
-		//tr_addr.sin_addr.s_addr = inet_addr(target_ip);
-		tr_addr.sin_addr.s_addr = inet_addr(target.c_str());
-	}
-
-	void operator () () {
-		string tr_message;
-
-		do {
-		getline(cin, tr_message);
-		} while(tr_message.length() == 0);
-
-		if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
+	void transmitter(string send_message) {
+		if((connect(send_sock, (sockaddr *)&send_addr, sizeof(send_addr))) < 0) {
 			cerr << "connect error" << endl;
 		}
 
-		if((send(tr_sock, tr_message.data(), tr_message.length() * sizeof(char), 0)) < 0) {
+		if((send(send_sock, send_message.data(), send_message.length() * sizeof(char), 0)) < 0) {
 			cerr << "send error" << endl;
 		}
 	}
 
-	~transmitter() { close(tr_sock); }
+
+	void recv_roop() {
+		while(1) {
+			receiver();
+			/*
+			if(recv_message != stock_message) {
+				cout << "\treceive message >> " << recv_message << endl << endl;
+				stock_message = recv_message;
+				recv_message.clear();
+			}
+			*/
+		}
+	}
+
+
+	void th_chat() {
+		thread th1(&chat::recv_roop, this);
+
+		while(1) {
+			string send_message;
+			do {
+				getline(cin, send_message);
+			} while(send_message.length() == 0);
+			transmitter(send_message);
+		}
+
+		th1.join();
+	}
 };
 
 
 int main()
 {
-	string target;
-
+	string target_ip;
 	cout << "input target ip >> ";
-	cin >> target;
+	//cin >> target_ip;
+	target_ip = TARGET_IP;
 	cout << "chat start" << endl << endl;
 
-	receiver re_obj;
-
-	//Always keeps receiving by th1 the messages.
-	thread th1(ref(re_obj));
-
-	while(1) {
-		transmitter tr_obj(target);
-		tr_obj();
-	}
-
-	th1.join();
+	chat obj(target_ip);
+	obj.th_chat();
 }
+
+
+
 
