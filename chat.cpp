@@ -110,13 +110,15 @@ public :
 
 int main(int argc, char *argv[])
 {
+	try {
 	string target_ip = argv[1];
-	//cout << "input target ip >> ";
-	//cin >> target_ip;
 	cout << "chat start\v" << endl;
-
 	chat obj(target_ip);
 	obj.th_chat();
+	}
+	catch(logic_error e) {
+		cout << "Error : There is not a cnsole argument." << endl;
+	}
 }
 
 
