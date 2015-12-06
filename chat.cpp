@@ -22,9 +22,7 @@
 
 #define LOG_FILE_NAME "log"
 #define PORT_NUMBER 40000
-//#define target_ip "192.168.1.26"
-#define TARGET_IP "127.0.0.1"
-#define MESSAGE_SIZE 3000
+#define MESSAGE_SIZE 3000 //1回に送受信するメッセージの文字数
 
 using namespace std;
 
@@ -60,6 +58,7 @@ public :
 		close(client_sock);
 	}
 
+	//1回受信
 	//戻り値stringにして受信メッセージ返した方がいいかも。
 	void receiver() {
 		recv_message.resize(MESSAGE_SIZE);
@@ -80,7 +79,7 @@ public :
 		}
 	}
 
-
+	//1回送信
 	void transmitter(string send_message) {
 		if((connect(send_sock, (sockaddr *)&send_addr, sizeof(send_addr))) < 0) {
 			cerr << "connect error" << endl;
@@ -92,6 +91,7 @@ public :
 	}
 
 
+	//受信と送信をループ
 	void th_chat() {
 		thread th1([this]{while(1) { receiver(); }});
 
@@ -108,12 +108,11 @@ public :
 };
 
 
-int main()
+int main(int argc, char *argv[])
 {
-	string target_ip;
-	cout << "input target ip >> ";
+	string target_ip = argv[1];
+	//cout << "input target ip >> ";
 	//cin >> target_ip;
-	target_ip = TARGET_IP;
 	cout << "chat start\v" << endl;
 
 	chat obj(target_ip);
