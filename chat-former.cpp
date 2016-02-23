@@ -82,18 +82,14 @@ public:
                 tr_sock = socket(AF_INET, SOCK_STREAM, 0);
                 tr_addr.sin_family = AF_INET;
                 tr_addr.sin_port = htons(port_number);
-                //tr_addr.sin_addr.s_addr = inet_addr(target_ip);
                 tr_addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
         }
         
         void operator () () {
                 string tr_message;
-                //cout << endl;
-                //cout << "input message >> ";
                 do {
                         getline(cin, tr_message);
                 } while(tr_message.length() == 0);
-                //cin >> tr_message;
                 
                 if((connect(tr_sock, (sockaddr *)&tr_addr, sizeof(tr_addr))) < 0) {
                         cerr << "connect error" << endl;
