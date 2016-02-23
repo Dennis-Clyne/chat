@@ -20,16 +20,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define LOG_FILE_NAME "chat-log"
 #define PORT_NUMBER 40000
 #define MESSAGE_SIZE 3000 //1回に送受信するメッセージの文字数
 
 using namespace std;
 
 class chat {
+        /*
         int recv_sock = 0, // 受信用ソケット
         send_sock = 0, // 送信用ソケット
         client_sock = 0; // サーバ側クライアントソケット
+        */
+        int recv_sock, // 受信用ソケット
+        send_sock, // 送信用ソケット
+        client_sock; // サーバ側クライアントソケット
 
         sockaddr_in base_addr, // read_addrとsend_addrの設定を一括で行うためのsockaddr_in構造体
                 read_addr, // 受信用アドレス構造体
@@ -57,7 +61,7 @@ public :
 
                 send_addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
 
-                listen(recv_sock, 1);
+                //listen(recv_sock, 1);
         }
 
 
@@ -69,6 +73,8 @@ public :
 
         //1回受信
         void receiver() {
+                listen(recv_sock, 1);
+
                 recv_message.resize(MESSAGE_SIZE);
 
                 if ((client_sock = accept(recv_sock, (sockaddr *)&write_addr, &write_addr_len)) < 0) {
@@ -110,8 +116,16 @@ public :
                                 getline(cin, send_message);
                         } while(send_message.length() == 0);
                         transmitter(send_message);
+                        /*
+                        if ((connect(send_sock, (sockaddr *)&send_addr, sizeof(send_addr))) < 0) {
+                                cerr << "connect error" << endl;
+                        }
+        
+                        if ((send(send_sock, send_message.data(), send_message.length() * sizeof(char), 0)) < 0) {
+                                cerr << "send error" << endl;
+                        }
+                        */
                 }
-
                 th1.join();
         }
 };
