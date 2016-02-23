@@ -21,18 +21,15 @@
 #include <unistd.h>
 
 #define log_file_name "log"
-#define port_number 30000
+#define port_number 40000
 
 using namespace std;
 
-mutex mtx1, mtx2;
-
-
 class receiver {
-        int re_sock = 0;
-        int re_new_sock = 0;
-        sockaddr_in read_addr;
-        sockaddr_in write_addr;
+        int re_sock = 0,
+            re_new_sock = 0;
+        sockaddr_in read_addr,
+                    write_addr;
         socklen_t write_addr_len = sizeof(write_addr);
 
 public:
